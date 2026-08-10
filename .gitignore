@@ -1,0 +1,10 @@
+# 环境与依赖
+venv/
+.venv/
+.env
+__pycache__/
+*.pyc
+
+# 数据（可重建）
+chroma_db/
+*.db

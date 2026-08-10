@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>test tech blog </title>
+  <link rel="stylesheet" href="style-practice.css">
+</head>
+<body>
+<!--使用整页容器-->
+<div class="page-layout">
+    <!--header区-->
+    <header class="area-header">
+        <img src="https://github.com/Xiaqiwen08.png" alt="头像"
+        style="width: 80px; height: 80px;border-radius: 50%">
+    <h1> Summer Project —— My Tech Blog </h1>
+    <p class="info"> From the SDUST soft engineering student : Qiwen Xia (夏琪文)</p>
+    <h2 class="title2">This is the student's main focus</h2>
+    <p class="target">AI application engineering, mainly working on Python backend and large model application development</p>
+    <p class="target">后端与 AI 工程方向，深耕 Python 技术栈，聚焦大模型应用（ LangChain / RAG ）与后端系统（ FastAPI + MySQL + DevOps ）</p>
+    </header>
+
+<nav class="area-nav">
+        <a href="#">首页</a>
+        <a href="#">菜单</a>
+        <a href="#">文章</a>
+        <a href="#">简历</a>
+        <a href="#">更多</a>
+    </nav>
+
+    <!--侧边栏-->
+<aside class="area-sidebar">
+    <div class="GitHub">
+        <p>Here is his GitHub profile:</p>
+        <a href="https://github.com/Xiaqiwen08">https://github.com/Xiaqiwen08</a>
+    </div>
+    
+    <h2>studied list</h2>
+    <ol>
+        <li>2026-06-30 · Ollama 本地大模型调用速查</li>
+        <li>2026-06-30 · 关闭 Ollama 开机自启动</li>
+        <li>2026-06-29 · 傅里叶级数踩坑记录</li>
+        <li>2026-06-29 · 三重积分 z 下限不是 0</li>
+    </ol>
+</aside>
+
+<!--主内容区-->
+<main class="area-content">
+    <!-- <p class="title">His growing notes</p> -->
+
+    <h2>📝 文章列表<span id = "counter" style="color: #ff6b9d;"> 点击次数：0</span></h2>
+    <div class="wrap_container"></div>
+
+    <div class="add-card-form">
+        <input type="text" id = "newTitle" placeholder="文章标题">
+        <input type="text" id = "newDesc" placeholder="文章描述">
+        <button id = "addBtn">➕ 新增文章</button>
+        <button id = "delAllBtn">➖️ 全部删除</button>
+    </div>
+
+    <h3>label</h3>
+    <div class="container">
+        <div class="item">Python</div>
+        <div class="item">C++</div>
+        <div class="item">SE</div>
+        <div class="item">Ollama</div>
+        <div class="item">MySQL</div>
+        <div class="item">HTML/CSS</div>
+        <div class="item">Pandas</div>
+        <div class="item">FastAPI</div>
+        <div class="item">Matplotlib</div>
+        <div class="item">Git</div>
+        <div class="item">Streamlit</div>
+        <div class="item">LLM</div>
+        <div class="item">Langchain</div>
+        <div class="item">DevOps</div>
+        <div class="item">JavaScript</div>
+        <div class="item">更多……</div>
+    </div>
+    
+    <h2>💬 留言板</h2>
+
+    <form class="comment-form">
+        <label>名字</label>
+        <input type="text" placeholder="你的昵称">
+
+        <label>邮箱</label>
+        <input type="email" placeholder="your@email.com">
+
+        <label>留言</label>
+        <textarea placeholder="写点什么吧..." rows="4"></textarea>
+
+        <button type="submit">发送留言</button>
+    </form>
+
+    <h2>🤖 AI 问答</h2>
+    <div class="ai-box">
+        <input type="text" id="aiQuestion" placeholder="问我任何问题...">
+        <button id="aiAskBtn">🔍 搜索</button>
+        <button id="aiInitBtn">🔄 更新知识库</button>
+        <div id="aiResult"></div>
+    </div>
+
+</main>
+
+    <footer class="area-footer">
+        <p>Made with ❤️ by my dear Doudou and me(Qiwen Xia)</p>
+    </footer>
+</div><!--此处整页Grid内容结束-->
+    <!-- 以上是所有网页内容 -->
+    <script>
+    // 这里的代码每次打开网页都会自动运行！
+    // ========== 初始化：fetch() 从后端拿 ==========
+    // 后端地址
+    const API = 'http://127.0.0.1:8000';
+    let cardData=[];
+    // 从后端拉数据（替代 localStorage）
+    async function loadCards() {
+        try{
+            let resp = await fetch(API + '/cards');
+            if(!resp.ok){
+                console.log('出错了！',resp.status);
+                return;
+            }
+            let data = await resp.json();
+            cardData = data.cards;
+        }catch(err){
+            console.log('⚠️ 后端还没启动？');
+            cardData = [];
+        }
+    }
+    // 页面加载时调用
+    (async function init() {
+        await loadCards();
+        renderCards();
+        bindEvents();
+    })();
+
+    // ========== 状态 ==========
+    let clickCount = 0;
+    let counterDisplay = document.querySelector('#counter');
+    let addBtn = document.querySelector('#addBtn');
+    let delAllBtn = document.querySelector('#delAllBtn');
+    let newTitle = document.querySelector('#newTitle');
+    let newDesc = document.querySelector('#newDesc');
+    
+
+    // ========== 函数：更新计数器 ==========
+    function updateCounter(){
+        clickCount = clickCount + 1;
+        counterDisplay.textContent = " 点击次数：" + clickCount;
+
+        // 判断：点满10次给个彩蛋
+            if(clickCount===10){
+            counterDisplay.style.color = '#ff4d6a';
+            counterDisplay.textContent = "🔥 你已经点了10次! 好棒!";
+        }
+    }
+
+    // ========== 函数：生成卡片 ==========
+    function renderCards() {
+        let container = document.querySelector('.wrap_container');
+        for (let i = 0; i < cardData.length; i++) {
+            // 创建卡片容器
+            let cardDiv = document.createElement('div');
+            cardDiv.className = 'card';
+            cardDiv.dataset.index = i;// 身份证！
+
+            // 标题——防攻击写法——用 textContent，永远安全
+            let h3 = document.createElement('h3');
+            h3.textContent = cardData[i].title;
+
+            // 日期
+            let dateP = document.createElement('p');
+            dateP.className = 'date';
+            dateP.textContent = cardData[i].date;
+
+            // 描述
+            let descP = document.createElement('p');
+            descP.textContent = cardData[i].desc;
+
+            // 🆕 编辑按钮
+            let editBtn = document.createElement('button');
+            editBtn.textContent = '✎';
+            editBtn.className = 'edit-btn';
+            editBtn.dataset.index = i;
+
+            // 🆕 删除按钮
+            let deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '✕';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.dataset.index = i;
+
+            // 组装
+            cardDiv.appendChild(h3);
+            cardDiv.appendChild(dateP);
+            cardDiv.appendChild(descP);
+            cardDiv.appendChild(editBtn);
+            cardDiv.appendChild(deleteBtn);
+            container.appendChild(cardDiv);
+        }
+    }
+
+    // ========== 函数：绑定事件 ==========
+    function bindEvents() {
+        let allCards = document.querySelectorAll('.card');
+        allCards.forEach(function(card) {
+            card.addEventListener('click',async function(event){
+                //二次确认删除
+                if(event.target.classList.contains('delete-btn')){
+                    let index = parseInt(event.target.dataset.index);
+                    let ok = confirm("确定要删除这篇文章嘛？删除后不可恢复哦～");
+                    if(ok){
+                        await fetch(API + '/cards/' + index,{ method:'DELETE' });
+                        await refreshCards();
+                        alert("删除成功~");
+                    }
+                    return;
+                }
+
+                //编辑：
+                if(event.target.classList.contains('edit-btn')){
+                    let index = parseInt(event.target.dataset.index);
+                    let changed = false;  // 标记：有没有真的改过
+
+                    // 标题
+                    let newTitle = prompt("修改标题（点确定跳过、点取消保留原样）：", cardData[index].title);
+                    if (newTitle !== null && newTitle !== '') {
+                        changed = true;
+                    }
+                    // ⚠️ 取消了也不return，继续弹描述
+
+                    // 描述
+                    let newDesc = prompt("修改描述（点确定跳过、点取消保留原样）：", cardData[index].desc);
+                    if (newDesc !== null && newDesc !== '') {
+                        changed = true;
+                    }
+
+                    // 真的有改动才保存+提示
+                    if (changed) {
+                        await fetch(API + '/cards/' + index,{
+                            method:'PUT',
+                            headers:{'Content-Type':'application/json'},
+                            body:JSON.stringify({
+                                title:(newTitle !== '' && newTitle != null) ? newTitle :cardData[index].title,
+                                date:cardData[index].date,
+                                desc:(newDesc !== '' && newDesc != null) ? newDesc :cardData[index].desc
+                            })
+                        });
+                        await refreshCards();
+                        alert("修改成功~");
+                    }
+                    return;
+                }
+
+                // 否则 → 计数
+                console.log("点击了：" + event.target.tagName);
+                updateCounter();
+            });
+        });
+    }
+
+    // ========== AI 搜索 ==========
+    let aiAskBtn = document.querySelector('#aiAskBtn');
+    let aiInitBtn = document.querySelector('#aiInitBtn');
+    let aiQuestion = document.querySelector('#aiQuestion');
+    let aiResult = document.querySelector('#aiResult');
+
+    // ========== 手动更新知识库 ==========
+    aiInitBtn.addEventListener('click', async function(){
+        aiResult.innerHTML = '<p>⏳ 正在更新知识库...</p>';
+
+        let resp = await fetch(API + '/ai-init', { method: 'POST' });
+        let data = await resp.json();
+
+        aiResult.innerHTML = '<p style="color:#2e8b57;">✅ ' + data.message + '</p>';
+    });
+
+    aiAskBtn.addEventListener('click', async function(){
+        let question = aiQuestion.value.trim();
+        if(question === ''){
+            aiResult.innerHTML = '<p style="color:#ff6b9d;">请输入问题哦~</p>';
+            return;
+        }
+        aiResult.innerHTML = '<p>⏳ 正在思考...</p>';
+
+        // ① 改成调 /rag！（原来 /ai-search）
+        let resp = await fetch(API + '/rag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: question })
+        });
+        let data = await resp.json();
+
+        // ② 显示AI回答！（原来显示检索结果列表）
+        aiResult.innerHTML = '<div class="ai-item" style="margin:8px 0;padding:12px;background:#f8f8f8;border-radius:6px;">'
+            + '<p style="white-space:pre-wrap;margin:0;">🤖 ' + data.answer + '</p>'
+            + '</div>';
+    });
+
+    // ========== 函数：让"新增文章"也走后端 ==========
+    async function refreshCards(){
+        await loadCards();// 重新拉数据
+        let container = document.querySelector('.wrap_container');
+        container.innerHTML = '';       // 清空页面
+        renderCards();                  // 重新渲染
+        bindEvents();                   // 重新绑定事件
+    }
+
+    // ========== 执行 ==========
+    console.log("欢迎来到夏琪文的博客！");
+    renderCards();
+    bindEvents();
+
+    //新增文章
+    addBtn.addEventListener('click',async function(){
+        let title = newTitle.value;
+        let desc = newDesc.value;
+        if(title=== '' || desc === ''){
+            alert("标题和描述不能为空哦～");
+            return;
+        }
+        //push 新数据
+        let today = new Date().toISOString().slice(0,10); // 自动获取今天日期
+        // 发 POST 请求到后端
+        await fetch(API + '/cards',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({title:title,date:today,desc:desc})
+        });
+
+        await refreshCards();              // 重新生成
+
+        newTitle.value='';
+        newDesc.value='';
+    });
+
+    //删除全部文章
+    delAllBtn.addEventListener('click',async function(){
+        let ok = confirm("确定要删除全部文章嘛？删除后不可恢复哦～");
+        if(ok){
+            for(let i=cardData.length-1;i>=0;i--){
+                await fetch(API + '/cards/' + i,{method:'DELETE',});
+            }
+            await refreshCards();
+            alert("删除成功~");
+            return;
+        }
+    });
+    </script>
+</body>
+</html>
